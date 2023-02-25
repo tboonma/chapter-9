@@ -36,15 +36,17 @@ const setupHandlers = (app, dbClient, messageChannel) => {
   app.get('/product', async (req, res) => {
     const productsCollection = await dbClient.collection('products')
     const product = await productsCollection
-      .aggregate([
-        {
-          $sample: {
-            size: 1
-          }
-        }
-      ])
-      .toArray()
-    res.json(product[0])
+        .aggregate([
+            {
+            $sample: {
+                size: 1
+            }
+            }
+        ]).toArray()
+    if (product.length === 0) {
+        return res.json({ name: "", url: "" })
+    }
+    return res.json(product[0])
   })
 }
 
