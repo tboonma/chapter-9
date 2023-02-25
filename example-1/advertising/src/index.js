@@ -1,6 +1,5 @@
 import express from 'express'
 import { MongoClient } from 'mongodb'
-import amqp from 'amqplib'
 import bodyParser from 'body-parser'
 
 if (!process.env.DBHOST) {
@@ -15,12 +14,6 @@ if (!process.env.DBNAME) {
   )
 }
 
-if (!process.env.RABBIT) {
-  throw new Error(
-    'Please specify the name of the RabbitMQ host using environment variable RABBIT'
-  )
-}
-
 if (!process.env.PORT) {
   throw new Error(
     'Please specify the port for this microservice using environment variable PORT'
@@ -29,10 +22,9 @@ if (!process.env.PORT) {
 
 const DBHOST = process.env.DBHOST
 const DBNAME = process.env.DBNAME
-const RABBIT = process.env.RABBIT
 const PORT = process.env.PORT
 
-const setupHandlers = (app, dbClient, messageChannel) => {
+const setupHandlers = (app, dbClient) => {
   app.get('/product', async (req, res) => {
     const productsCollection = await dbClient.collection('products')
     const product = await productsCollection
@@ -56,23 +48,17 @@ const connectDatabase = async () => {
   return database
 }
 
-const connectRabbitMQ = async () => {
-  const connection = await amqp.connect(RABBIT)
-  return connection.createChannel()
-}
-
 const main = async () => {
   const dbClient = await connectDatabase()
-  const messageChannel = await connectRabbitMQ()
   const app = express()
   app.use(bodyParser.json())
-  setupHandlers(app, dbClient, messageChannel)
+  setupHandlers(app, dbClient)
   app.listen(PORT, () => console.log(`Microservice listening on port ${PORT}`))
 }
 
 main()
   .then(() => console.log('Microservice online'))
-  .catch(() => {
+  .catch((err) => {
     console.error('Microservice failed to start.')
     console.error((err && err.stack) || err)
   })
