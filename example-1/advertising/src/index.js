@@ -33,14 +33,25 @@ const RABBIT = process.env.RABBIT
 const PORT = process.env.PORT
 
 const setupHandlers = (app, dbClient, messageChannel) => {
-  app.get('/videos', (req, res) => {
-    res.json({ status: 'success' })
+  app.get('/videos', async (req, res) => {
+    const productsCollection = await dbClient.collection('products')
+    const product = await productsCollection
+      .aggregate([
+        {
+          $sample: {
+            size: 1
+          }
+        }
+      ])
+      .toArray()
+    res.json(product[0])
   })
 }
 
 const connectDatabase = async () => {
   const client = await MongoClient.connect(DBHOST)
-  return client.db(DBNAME)
+  const database = client.db(DBNAME)
+  return database
 }
 
 const connectRabbitMQ = async () => {
