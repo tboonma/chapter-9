@@ -28,8 +28,29 @@ function setupHandlers(app) {
                 });
 
                 response.on("end", () => {
-                    // Renders the video list for display in the browser.
-                    res.render("video-list", { videos: JSON.parse(data).videos });
+                    http.request(
+                            {
+                                host: `advertising`,
+                                path: `/product`,
+                                method: `GET`,
+                            },
+                            (response) => {
+                                let adData = "";
+                                response.on("data", chunk => {
+                                    adData += chunk;
+                                });
+                
+                                response.on("end", () => {
+                                    res.render("video-list", { videos: JSON.parse(data).videos, advertising: JSON.parse(adData) })
+                                });
+                
+                                response.on("error", err => {
+                                    console.error("Failed to get history.");
+                                    console.error(err || `Status code: ${response.statusCode}`);
+                                    res.sendStatus(500);
+                                });
+                            }
+                        ).end();
                 });
 
                 response.on("error", err => {
@@ -64,9 +85,30 @@ function setupHandlers(app) {
                         metadata,
                         url: `/api/video?id=${videoId}`,
                     };
-                    
-                    // Renders the video for display in the browser.
-                    res.render("play-video", { video });
+                    // Renders the advertising for display in the browser.
+                    http.request(
+                        {
+                            host: `advertising`,
+                            path: `/product`,
+                            method: `GET`,
+                        },
+                        (response) => {
+                            let adData = "";
+                            response.on("data", chunk => {
+                                adData += chunk;
+                            });
+            
+                            response.on("end", () => {
+                                res.render("play-video", { video: video, advertising: JSON.parse(adData) })
+                            });
+            
+                            response.on("error", err => {
+                                console.error("Failed to get history.");
+                                console.error(err || `Status code: ${response.statusCode}`);
+                                res.sendStatus(500);
+                            });
+                        }
+                    ).end();
                 });
 
                 response.on("error", err => {
@@ -82,7 +124,29 @@ function setupHandlers(app) {
     // Web page to upload a new video.
     //
     app.get("/upload", (req, res) => {
-        res.render("upload-video", {});
+        http.request(
+            {
+                host: `advertising`,
+                path: `/product`,
+                method: `GET`,
+            },
+            (response) => {
+                let adData = "";
+                response.on("data", chunk => {
+                    adData += chunk;
+                });
+
+                response.on("end", () => {
+                    res.render("upload-video", { advertising: JSON.parse(adData) })
+                });
+
+                response.on("error", err => {
+                    console.error("Failed to get history.");
+                    console.error(err || `Status code: ${response.statusCode}`);
+                    res.sendStatus(500);
+                });
+            }
+        ).end();
     });
 
     //
@@ -96,14 +160,36 @@ function setupHandlers(app) {
                 method: `GET`,
             },
             (response) => {
-                let data = "";
+                let historyData = "";
                 response.on("data", chunk => {
-                    data += chunk;
+                    historyData += chunk;
                 });
 
                 response.on("end", () => {
-                    // Renders the history for display in the browser.
-                    res.render("history", { videos: JSON.parse(data).videos });
+                    // Renders the advertising for display in the browser.
+                    http.request(
+                        {
+                            host: `advertising`,
+                            path: `/product`,
+                            method: `GET`,
+                        },
+                        (response) => {
+                            let adData = "";
+                            response.on("data", chunk => {
+                                adData += chunk;
+                            });
+            
+                            response.on("end", () => {
+                                res.render("history", { videos: JSON.parse(historyData).videos, advertising: JSON.parse(adData) });
+                            });
+            
+                            response.on("error", err => {
+                                console.error("Failed to get history.");
+                                console.error(err || `Status code: ${response.statusCode}`);
+                                res.sendStatus(500);
+                            });
+                        }
+                    ).end();
                 });
 
                 response.on("error", err => {

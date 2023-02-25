@@ -33,7 +33,7 @@ const RABBIT = process.env.RABBIT
 const PORT = process.env.PORT
 
 const setupHandlers = (app, dbClient, messageChannel) => {
-  app.get('/videos', async (req, res) => {
+  app.get('/product', async (req, res) => {
     const productsCollection = await dbClient.collection('products')
     const product = await productsCollection
       .aggregate([
